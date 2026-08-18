@@ -107,7 +107,7 @@
       border-radius: 28px;
       box-shadow: var(--shadow);
     }
-    .eyebrow { display: inline-flex; padding: 5px 10px; color: var(--blue); background: var(--blue-soft); border-radius: 999px; font-size: .82rem; font-weight: 760; letter-spacing: .04em; }
+    .eyebrow { display: inline-flex; padding: 5px 10px; color: var(--blue); background: var(--blue-soft); border-radius: 999px; font-size: 1.2rem; font-weight: 760; letter-spacing: .04em; }
     h1 { max-width: 820px; margin: 15px 0 12px; font-size: clamp(2rem, 5.2vw, 4.25rem); line-height: 1.06; letter-spacing: -.045em; }
     .lead { max-width: 800px; margin: 0; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.14rem); }
     .hero-side { display: grid; gap: 10px; align-content: end; }
@@ -225,8 +225,8 @@
     <div class="wrap topbar">
       <div class="brand"><strong>Scaling and Renormalization in Statistical Physics — Solutions</strong><span>Written derivation × Lean 4</span></div>
       <nav class="nav" aria-label="Primary">
-        <a href="https://kikiyenhaoyang.github.io/kikiyen/Web/Cardy_solution.html">Back to the previous page</a>
-        <a href="cardy1_1(1).lean" download>Download Lean file</a>
+        <a href="https://kikiyenhaoyang.github.io/kikiyen/Web/Cardy_solution.html">Back to the index page</a>
+        <a id="download-lean" href="https://raw.githubusercontent.com/kikiyenhaoyang/Lean-Formalization-for-Scaling-and-Renormalization-in-Statistical-Physics-by-John-Cardy/main/CardyChapterOne/cardy1_1.lean" download="cardy1_1.lean">Download Lean file</a>
       </nav>
     </div>
   </header>
@@ -234,7 +234,8 @@
   <main id="main" class="wrap" tabindex="-1">
     <section class="hero">
       <div>
-        <span class="eyebrow">PROBLEM 1.1 · FORMALIZED SOLUTION</span>
+       
+        <h5><span class="eyebrow">1.1 · FORMALIZED SOLUTION</span></h5>
         <p class="lead">In this exercise, we map the occupation variables of a binary alloy to $s(r)\in\{+1,-1\}$, expand the Hamiltonian term by term, and align the written derivation with theorems checked by the Lean 4 kernel.</p>
       </div>
     </section>
@@ -545,6 +546,31 @@
           button.textContent = 'Copy failed';
         }
       });
+    });
+
+    const downloadLean = document.querySelector('#download-lean');
+    downloadLean?.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const originalText = downloadLean.textContent;
+      downloadLean.textContent = 'Downloading…';
+
+      try {
+        const response = await fetch(downloadLean.href);
+        if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+        const objectUrl = URL.createObjectURL(await response.blob());
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = 'cardy1_1.lean';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      } catch (_) {
+        window.location.href = downloadLean.href;
+      } finally {
+        downloadLean.textContent = originalText;
+      }
     });
 
     const links = [...document.querySelectorAll('nav a[href^="#"]')];
