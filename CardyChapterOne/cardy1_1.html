@@ -181,7 +181,14 @@
     .note { border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--line)); background: var(--amber-soft); }
     .result strong { color: var(--green); }
     .note strong { color: var(--amber); }
-
+    .warning {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 14px;
+    }
+    .warning { border: 1px solid color-mix(in srgb, var(--green) 38%, var(--line)); background: rgba(231, 69, 69, 0.343); }
+    .warning strong { color: rgb(255, 58, 58); }
+    
     .map-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
     .map-table th, .map-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
     .map-table th { color: var(--muted); font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; }
@@ -226,7 +233,7 @@
       <div class="brand"><strong>Scaling and Renormalization in Statistical Physics — Solutions</strong><span>Written derivation × Lean 4</span></div>
       <nav class="nav" aria-label="Primary">
         <a href="https://kikiyenhaoyang.github.io/kikiyen/Web/Cardy_solution.html">Back to the index page</a>
-        <a id="download-lean" href="https://raw.githubusercontent.com/kikiyenhaoyang/Lean-Formalization-for-Scaling-and-Renormalization-in-Statistical-Physics-by-John-Cardy/main/CardyChapterOne/cardy1_1.lean" download="cardy1_1.lean">Download Lean file</a>
+        <a id="download-lean" href="https://raw.githubusercontent.com/kikiyenhaoyang/Lean-Formalization-for-Scaling-and-Renormalization-in-Statistical-Physics-by-John-Cardy/main/CardyChapterOne/cardy1_1.lean" download="cardy1_1.lean">Download full Lean file</a>
       </nav>
     </div>
   </header>
@@ -234,123 +241,224 @@
   <main id="main" class="wrap" tabindex="-1">
     <section class="hero">
       <div>
-       
-        <h5><span class="eyebrow">1.1 · FORMALIZED SOLUTION</span></h5>
-        <p class="lead">In this exercise, we map the occupation variables of a binary alloy to $s(r)\in\{+1,-1\}$, expand the Hamiltonian term by term, and align the written derivation with theorems checked by the Lean 4 kernel.</p>
+        <h5><span class="eyebrow">PROBLEM 1.1 · FORMALIZED SOLUTION</span></h5>
+        <p class="lead">In this exercise, we map the occupation variables of a binary alloy to 
+$s(r)\in\{+1,-1\}$, expand the Hamiltonian term by term, and align the written derivation with theorems checked by the Lean 4 kernel.Each written explanation appears beside the Lean definition, lemma, or theorem introduced at that point in the source file.</p>
+      </div>
+      <div class="warning"><strong>Warning:</strong>
+      The Lean 4 code in this webpage is merely illustrative. The Lean 4 file is designed to be compiled in the context of the full project, including name space, other files or libraries, and dependencies. 
+      To compile the Lean 4 code, please see the full project on
+      <a href="https://github.com/kikiyenhaoyang/Lean-Formalization-for-Scaling-and-Renormalization-in-Statistical-Physics-by-John-Cardy/tree/main/CardyChapterOne">GitHub</a>.</div>
       </div>
     </section>
 
     <div class="legend" aria-label="Legend">
-      <span><i class="dot"></i>Written mathematical derivation</span>
-      <span><i class="dot green"></i>Lean 4 formalization</span>
+      <span><i class="dot"></i>Written mathematical explanation</span>
+      <span><i class="dot green"></i>Lean 4 declaration in source order</span>
       <span><i class="dot amber"></i>Formalization-scope note</span>
     </div>
 
-    <section class="section" id="setup">
+    <section class="section" id="species-spin">
       <div class="section-head">
-        <h2>1 · Define the binary-alloy Hamiltonian</h2>
-        <p>Reduce the full system to the energy of each pair of sites</p>
+        <h2>1 · Define the species and their occupation/spin values</h2>
+        <p>Lean begins with the local state space before introducing the lattice Hamiltonian</p>
       </div>
       <div class="compare">
         <article class="pane">
-          <div class="pane-label math-label">Written solution <span class="tag">Model definition</span></div>
-          <p>Let $n_A(r),n_B(r)\in\{0,1\}$ indicate whether site $r$ is occupied by species $A$ or $B$. The binary-alloy Hamiltonian is</p>
+          <div class="pane-label math-label">Written solution <span class="tag">Basic data</span></div>
+          <p>A lattice site can contain one of two species, $A$ or $B$, define the corresponding set $\text{Species} = \{A, B\}$. 
+            Define the occupation numbers $$n_A, n_B :\text{Species} \to \{0, 1\}$$ and spin value $$s :\text{Species} \to \{-1, +1\}$$ by the following table:</p>
+          <div class="math">$$
+          \begin{array}{c|ccc}
+          \text{species} & n_A & n_B & s \\ \hline
+          A & 1 & 0 & +1 \\
+          B & 0 & 1 & -1
+          \end{array}
+          $$</div>
+          <p>These local definitions are the foundation for every later algebraic identity.</p>
+        </article>
+        <article class="pane">
+          <div class="pane-label lean-label">Lean 4 <span class="tag">Species, nA, nB, spin</span></div>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>inductive Species
+  | A
+  | B
+  deriving DecidableEq, Repr
+
+/-- Occupation number n_A ∈ {0,1}. -/
+def nA : Species → ℝ
+  | .A =&gt; 1
+  | .B =&gt; 0
+
+/-- Occupation number n_B ∈ {0,1}. -/
+def nB : Species → ℝ
+  | .A =&gt; 0
+  | .B =&gt; 1
+
+/-- Spin representation:
+    A ↦ +1,
+    B ↦ -1.
+-/
+def spin : Species → ℝ
+  | .A =&gt; 1
+  | .B =&gt; -1</code></pre></div>
+          <p class="small">The Lean file first defines the two constructors <code>A</code>/<code>B</code>, then the occupation-number functions and spin representation.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="local-identities">
+      <div class="section-head">
+        <h2>2 · Prove the basic local identities</h2>
+        <p>The occupation variables are rewritten exactly in terms of the spin variable</p>
+      </div>
+      <div class="compare">
+        <article class="pane">
+          <div class="pane-label math-label">Written solution <span class="tag">Exact identities</span></div>
+          <p>For either species, the occupation numbers satisfy</p>
+          <div class="math">$$n_A=\frac{1+s}{2},\qquad n_B=\frac{1-s}{2}.$$</div>
+          <p>Two additional facts are recorded immediately:</p>
+          <div class="math">$$s^2=1,\qquad n_A+n_B=1.$$</div>
+          <p>All four statements are exact identities, not approximations.</p>
+        </article>
+        <article class="pane">
+          <div class="pane-label lean-label">Lean 4 <span class="tag">nA_eq_spin → nA_add_nB</span></div>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>@[simp]
+theorem nA_eq_spin (x : Species) :
+    nA x = (1 + spin x) / 2 := by
+  cases x &lt;;&gt; norm_num [nA, spin]
+
+@[simp]
+theorem nB_eq_spin (x : Species) :
+    nB x = (1 - spin x) / 2 := by
+  cases x &lt;;&gt; norm_num [nB, spin]
+
+@[simp]
+theorem spin_sq (x : Species) :
+    spin x ^ 2 = 1 := by
+  cases x &lt;;&gt; norm_num [spin]
+
+@[simp]
+theorem nA_add_nB (x : Species) :
+    nA x + nB x = 1 := by
+  cases x &lt;;&gt; norm_num [nA, nB]</code></pre></div>
+          <p class="small"><code>cases x</code> checks the two species cases; <code>norm_num</code> closes the numerical goals.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="config">
+      <div class="section-head">
+        <h2>3 · Lift the local spin map to a finite lattice configuration</h2>
+        <p>Only after the local identities does the Lean file introduce lattice configurations</p>
+      </div>
+      <div class="compare">
+        <article class="pane">
+          <div class="pane-label math-label">Written solution <span class="tag">Configuration</span></div>
+          <p>Let the set of all sites be denoted by $\mathrm{Site}$. A binary-alloy configuration assigns a species to every site:</p>
+          <div class="math">$$\sigma:\mathrm{Site}\to\{A,B\}.$$</div>
+          <p>The associated spin configuration is obtained pointwise:</p>
+          <div class="math">$$s_\sigma(r)=s(\sigma(r))\in\{+1,-1\}.$$</div>
+          <p class="small">The finite-lattice section assumes <code>[Fintype Site]</code>, so all later sums are finite.</p>
+        </article>
+        <article class="pane">
+          <div class="pane-label lean-label">Lean 4 <span class="tag">Config, spinConfig</span></div>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>section FiniteLattice
+
+variable {Site : Type*} [Fintype Site]
+
+/-- A configuration of the alloy. -/
+abbrev Config (Site : Type*) := Site → Species
+
+/-- The spin configuration associated to an alloy configuration. -/
+def spinConfig (σ : Config Site) : Site → ℝ :=
+  fun r =&gt; spin (σ r)</code></pre></div>
+          
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="alloy-hamiltonian">
+      <div class="section-head">
+        <h2>4 · Define the original binary-alloy Hamiltonian</h2>
+        <p>The full energy is introduced after the state and configuration maps</p>
+      </div>
+      <div class="compare">
+        <article class="pane">
+          <div class="pane-label math-label">Written solution <span class="tag">Original model</span></div>
+          <p>For a configuration $\sigma$, the binary-alloy Hamiltonian is</p>
           <div class="math">$$
           \begin{aligned}
-          H=\sum_{r,r'}\big[&J_{AA}(r-r')n_A(r)n_A(r')+J_{BB}(r-r')n_B(r)n_B(r')\\
-          &+J_{AB}(r-r')n_A(r)n_B(r')+J_{AB}(r-r')n_B(r)n_A(r')\big].
+          H_{\mathrm{alloy}}=\sum_{r,r'}\big[&J_{AA}(r,r')n_A(\sigma(r))n_A(\sigma(r'))\\
+          &+J_{BB}(r,r')n_B(\sigma(r))n_B(\sigma(r'))\\
+          &+J_{AB}(r,r')n_A(\sigma(r))n_B(\sigma(r'))\\
+          &+J_{AB}(r,r')n_B(\sigma(r))n_A(\sigma(r'))\big].
           \end{aligned}
           $$</div>
-          <p class="small">Lean uses the more general two-variable kernel $J(r,r')$. For a translation-invariant interaction, one may set $J(r,r')=V(r-r')$.</p>
+          <p>At this stage the interaction is represented by general two-variable kernels $$J_{AA},J_{BB},J_{AB}:\text{Site}\times\text{Site}\to\mathbb{R}.$$</p>
         </article>
         <article class="pane">
           <div class="pane-label lean-label">Lean 4 <span class="tag">alloyHamiltonian</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">inductive</span> <span class="ty">Species</span>
-  | A | B
-  deriving DecidableEq, Repr
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## Original alloy Hamiltonian -/
 
-<span class="kw">abbrev</span> <span class="fn">Config</span> (Site : Type*) := Site → Species
+/--
+The original binary-alloy Hamiltonian
 
-<span class="kw">def</span> <span class="fn">alloyHamiltonian</span>
+H =
+  Σ_{r,r'} [
+    J_AA(r,r') n_A(r)n_A(r')
+    + J_BB(r,r') n_B(r)n_B(r')
+    + J_AB(r,r') n_A(r)n_B(r')
+    + J_AB(r,r') n_B(r)n_A(r')
+  ].
+-/
+def alloyHamiltonian
     (JAA JBB JAB : Site → Site → ℝ)
     (σ : Config Site) : ℝ :=
-  ∑ r : Site, ∑ r' : Site,
-    (JAA r r' * nA (σ r) * nA (σ r')
-    + JBB r r' * nB (σ r) * nB (σ r')
-    + JAB r r' * nA (σ r) * nB (σ r')
-    + JAB r r' * nB (σ r) * nA (σ r'))</code></pre></div>
-          <p class="small"><code>[Fintype Site]</code> makes the set of lattice sites finite, so the double finite sum is well-defined directly.</p>
+  ∑ r : Site,
+    ∑ r' : Site,
+      (
+        JAA r r' * nA (σ r) * nA (σ r')
+        + JBB r r' * nB (σ r) * nB (σ r')
+        + JAB r r' * nA (σ r) * nB (σ r')
+        + JAB r r' * nB (σ r) * nA (σ r')
+      )</code></pre></div>
+          
         </article>
       </div>
     </section>
 
-    <section class="section" id="spin-map">
+    <section class="section" id="pair-energy">
       <div class="section-head">
-        <h2>2 · Map $A/B$ occupation to Ising spins</h2>
-        <p>$A\mapsto+1$，$B\mapsto-1$</p>
-      </div>
-      <div class="compare">
-        <article class="pane">
-          <div class="pane-label math-label">Written solution <span class="tag">Change of variables</span></div>
-          <p>Define $s(r)=+1$ for species $A$ and $s(r)=-1$ for species $B$. Then</p>
-          <div class="math">$$n_A(r)=\frac{1+s(r)}{2},\qquad n_B(r)=\frac{1-s(r)}{2}.$$</div>
-          <p>This substitution is not an approximation: it is an exact identity for each species, and $s(r)^2=1$.</p>
-          <table class="map-table" aria-label="Species, spin, and occupation-number correspondence">
-            <thead><tr><th>Species</th><th>$s$</th><th>$n_A$</th><th>$n_B$</th></tr></thead>
-            <tbody><tr><td>$A$</td><td>$+1$</td><td>$1$</td><td>$0$</td></tr><tr><td>$B$</td><td>$-1$</td><td>$0$</td><td>$1$</td></tr></tbody>
-          </table>
-        </article>
-        <article class="pane">
-          <div class="pane-label lean-label">Lean 4 <span class="tag">Proof by cases</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">def</span> <span class="fn">nA</span> : Species → ℝ
-  | .A => 1 | .B => 0
-
-<span class="kw">def</span> <span class="fn">nB</span> : Species → ℝ
-  | .A => 0 | .B => 1
-
-<span class="kw">def</span> <span class="fn">spin</span> : Species → ℝ
-  | .A => 1 | .B => -1
-
-@[simp] <span class="kw">theorem</span> <span class="fn">nA_eq_spin</span> (x : Species) :
-    nA x = (1 + spin x) / 2 := <span class="kw">by</span>
-  cases x &lt;;&gt; norm_num [nA, spin]
-
-@[simp] <span class="kw">theorem</span> <span class="fn">nB_eq_spin</span> (x : Species) :
-    nB x = (1 - spin x) / 2 := <span class="kw">by</span>
-  cases x &lt;;&gt; norm_num [nB, spin]</code></pre></div>
-          <p class="small"><code>cases x</code> checks the cases $x=A$ and $x=B$ separately; <code>norm_num</code> completes the numerical simplification.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section" id="local">
-      <div class="section-head">
-        <h2>3 · Term-by-term expansion and the local energy identity</h2>
-        <p>Condense the four products into one reusable lemma</p>
+        <h2>5 · Prove the pair-energy identity</h2>
+        <p>The handwritten term-by-term expansion becomes one reusable algebraic lemma</p>
       </div>
       <div class="compare">
         <article class="pane">
           <div class="pane-label math-label">Written solution <span class="tag">Algebraic core</span></div>
-          <p>Writing $s=s(r)$ and $s'=s(r')$, the four terms are</p>
+          <p>Substituting $n_A=(1+s)/2$ and $n_B=(1-s)/2$ into one pair energy gives</p>
           <div class="math">$$
           \begin{aligned}
-          J_{AA}n_An_A'&=\tfrac14J_{AA}(1+s+s'+ss'),\\
-          J_{BB}n_Bn_B'&=\tfrac14J_{BB}(1-s-s'+ss'),\\
-          J_{AB}n_An_B'&=\tfrac14J_{AB}(1+s-s'-ss'),\\
-          J_{AB}n_Bn_A'&=\tfrac14J_{AB}(1-s+s'-ss').
+          &a n_A(x)n_A(y)+b n_B(x)n_B(y)+c n_A(x)n_B(y)+c n_B(x)n_A(y)\\
+          &=\tfrac14(a+b-2c)s(x)s(y)
+          +\tfrac14(a-b)(s(x)+s(y))
+          +\tfrac14(a+b+2c).
           \end{aligned}
           $$</div>
-          <p>After summing them, the energy of each pair of sites becomes</p>
-          <div class="math">$$
-          \frac14(J_{AA}+J_{BB}-2J_{AB})ss'
-          +\frac14(J_{AA}-J_{BB})(s+s')
-          +\frac14(J_{AA}+J_{BB}+2J_{AB}).
-          $$</div>
+          <p>Set $a=J_{AA}(r,r')$, $b=J_{BB}(r,r')$, $c=J_{AB}(r,r')$, $x=\sigma(r)$, and $y=\sigma(r')$ to obtain the pairwise alloy-to-Ising decomposition.</p>
         </article>
         <article class="pane">
           <div class="pane-label lean-label">Lean 4 <span class="tag">pair_energy_identity</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">lemma</span> <span class="fn">pair_energy_identity</span>
-    (a b c : ℝ) (x y : Species) :
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## Local algebraic identity -/
+
+/--
+This is the algebraic calculation performed in the handwritten
+solution, but reduced to a theorem about five real numbers.
+
+It is the key local identity behind the alloy → Ising mapping.
+-/
+lemma pair_energy_identity
+    (a b c : ℝ)
+    (x y : Species) :
       a * nA x * nA y
     + b * nB x * nB y
     + c * nA x * nB y
@@ -360,117 +468,270 @@
         * spin x * spin y
     + ((1 / 4 : ℝ) * (a - b))
         * (spin x + spin y)
-    + ((1 / 4 : ℝ) * (a + b + 2 * c)) := <span class="kw">by</span>
+    + ((1 / 4 : ℝ) * (a + b + 2 * c)) := by
   simp only [nA_eq_spin, nB_eq_spin]
   ring</code></pre></div>
-          <div class="result"><strong>Correspondence:</strong> Set $a=J_{AA}(r,r')$, $b=J_{BB}(r,r')$, $c=J_{AB}(r,r')$, $x=\sigma(r)$, and $y=\sigma(r')$ to obtain the pairwise formula in the left pane.</div>
+          <div class="result"><strong>Lean proof:</strong> rewrite with <code>nA_eq_spin</code> and <code>nB_eq_spin</code>, then close the polynomial identity with <code>ring</code>.</div>
         </article>
       </div>
     </section>
 
-    <section class="section" id="parameters">
+    <section class="section" id="decomposition">
       <div class="section-head">
-        <h2>4 · Read off the effective coupling, field, and constant</h2>
-        <p>Collect the linear terms in the double sum into $\sum_r h(r)s(r)$</p>
+        <h2>6 · Decompose the full alloy Hamiltonian</h2>
+        <p>Apply the pair identity obtained in the previous lemma everywhere before converting the field term</p>
       </div>
       <div class="compare">
         <article class="pane">
-          <div class="pane-label math-label">Written solution <span class="tag">Standard Ising form</span></div>
-          <div class="math">$$H=\sum_{r,r'}J(r,r')s(r)s(r')+\sum_r h(r)s(r)+C,$$</div>
+          <div class="pane-label math-label">Written solution <span class="tag">Three-part decomposition</span></div>
+          <p>Applying the local identity to every pair gives</p>
           <div class="math">$$
           \begin{aligned}
-          J(r,r')&=\tfrac14\big(J_{AA}(r,r')+J_{BB}(r,r')-2J_{AB}(r,r')\big),\\
-          h(r)&=\tfrac14\sum_{r'}\big[J_{AA}(r,r')-J_{BB}(r,r')\\
-          &\hspace{5.5em}+J_{AA}(r',r)-J_{BB}(r',r)\big],\\
-          C&=\tfrac14\sum_{r,r'}\big[J_{AA}(r,r')+J_{BB}(r,r')+2J_{AB}(r,r')\big].
+          H_{\mathrm{alloy}}(\sigma)
+          =&\sum_{r,r'}\tfrac14\bigg[J_{AA}(r,r')+J_{BB}(r,r')-2J_{AB}(r,r')\bigg]s_\sigma(r)s_\sigma(r')\\
+          &+\sum_{r,r'}\tfrac14\big(J_{AA}(r,r')-J_{BB}(r,r')\big)
+            \big(s_\sigma(r)+s_\sigma(r')\big)\\
+            &+\sum_{r,r'}\tfrac14\big(J_{AA}(r,r')+J_{BB}(r,r')+2J_{AB}(r,r')\big).
           \end{aligned}
           $$</div>
-          <p class="small">The field $h(r)$ receives contributions both when $r$ appears in the first argument and when it appears in the second. This is why the formula contains both $J(r,r')$ and $J(r',r)$.</p>
+          <p>This intermediate theorem intentionally leaves the linear term as a double sum.</p>
         </article>
         <article class="pane">
-          <div class="pane-label lean-label">Lean 4 <span class="tag">effective parameters</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">noncomputable def</span> <span class="fn">effectiveCoupling</span>
-    (JAA JBB JAB : Site → Site → ℝ) (r r' : Site) : ℝ :=
-  (1 / 4 : ℝ) * (JAA r r' + JBB r r' - 2 * JAB r r')
+          <div class="pane-label lean-label">Lean 4 <span class="tag">alloy_decomposition</span></div>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## The decomposition theorem -/
 
-<span class="kw">noncomputable def</span> <span class="fn">effectiveField</span>
-    (JAA JBB : Site → Site → ℝ) (r : Site) : ℝ :=
-    (∑ r' : Site, (1 / 4 : ℝ) * (JAA r r' - JBB r r'))
-  + (∑ r' : Site, (1 / 4 : ℝ) * (JAA r' r - JBB r' r))
+/--
+First version of the main calculation:
+the alloy Hamiltonian decomposes into
 
-<span class="kw">noncomputable def</span> <span class="fn">effectiveConstant</span>
-    (JAA JBB JAB : Site → Site → ℝ) : ℝ :=
-  ∑ r : Site, ∑ r' : Site,
-    (1 / 4 : ℝ) * (JAA r r' + JBB r r' + 2 * JAB r r')</code></pre></div>
-          <p class="small"><code>effectiveField_formula</code> and <code>effectiveConstant_formula</code> separately prove that these definitions equal the expressions in the left pane.</p>
+1. quadratic Ising term,
+2. linear term,
+3. constant term.
+-/
+lemma alloy_decomposition
+    (JAA JBB JAB : Site → Site → ℝ)
+    (σ : Config Site) :
+    alloyHamiltonian JAA JBB JAB σ
+    =
+      (∑ r : Site, ∑ r' : Site,
+        effectiveCoupling JAA JBB JAB r r'
+          * spinConfig σ r
+          * spinConfig σ r')
+      +
+      (∑ r : Site, ∑ r' : Site,
+        (1 / 4 : ℝ)
+          * (JAA r r' - JBB r r')
+          * (spinConfig σ r + spinConfig σ r'))
+      +
+      effectiveConstant JAA JBB JAB := by
+  classical
+  unfold alloyHamiltonian
+    effectiveCoupling
+    effectiveConstant
+    spinConfig
+  simp_rw [pair_energy_identity]
+  simp only [Finset.sum_add_distrib]</code></pre></div>
+          <p class="small"><code>simp_rw [pair_energy_identity]</code> applies the local identity throughout the finite double sum.</p>
         </article>
       </div>
     </section>
 
-    <section class="section" id="rearrange">
+    <section class="section" id="field-rearrangement">
       <div class="section-head">
-        <h2>5 · Rearrange the linear term</h2>
-        <p>The step most easily omitted in a handwritten derivation</p>
+        <h2>7 · Rearrange the linear term into a one-site field</h2>
+        <p>The second spin in the pair sum is handled by exchanging dummy indices</p>
       </div>
       <div class="compare">
         <article class="pane">
-          <div class="pane-label math-label">Written solution <span class="tag">Exchange summation indices</span></div>
-          <p>Let $D(r,r')=J_{AA}(r,r')-J_{BB}(r,r')$. Then</p>
+          <div class="pane-label math-label">Written solution <span class="tag">Index exchange</span></div>
+          <p>Let $D(r,r')=J_{AA}(r,r')-J_{BB}(r,r')$. The linear contribution is</p>
+          <div class="math">$$\sum_{r,r'}\frac14D(r,r')\big(s(r)+s(r')\big).$$</div>
+          <p>Split the two terms, exchange $r\leftrightarrow r'$ in the second double sum, and factor out $s(r)$, then the linear contribution becomes:</p>
           <div class="math">$$
-          \begin{aligned}
-          &\sum_{r,r'}\frac14D(r,r')\big(s(r)+s(r')\big)\\
-          &=\sum_r\left[\sum_{r'}\frac14D(r,r')+\sum_{r'}\frac14D(r',r)\right]s(r)\\
-          &=\sum_r h(r)s(r).
-          \end{aligned}
+          \sum_r\left[\sum_{r'}\frac14D(r,r')+\sum_{r'}\frac14D(r',r)\right]s(r).
           $$</div>
-          <p>In the second term, exchange the dummy indices $r\leftrightarrow r'$ and then factor out the common $s(r)$.</p>
         </article>
         <article class="pane">
           <div class="pane-label lean-label">Lean 4 <span class="tag">field_rearrangement</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">lemma</span> <span class="fn">field_rearrangement</span>
-    (D : Site → Site → ℝ) (s : Site → ℝ) :
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## Rearranging the linear term -/
+
+/--
+Rearrange
+
+Σ_{r,r'} 1/4 D(r,r') (s(r) + s(r'))
+
+into
+
+Σ_r h(r) s(r),
+
+where
+
+h(r) =
+  Σ_{r'} 1/4 D(r,r')
+  + Σ_{r'} 1/4 D(r',r).
+-/
+lemma field_rearrangement
+    (D : Site → Site → ℝ)
+    (s : Site → ℝ) :
     (∑ r : Site, ∑ r' : Site,
       (1 / 4 : ℝ) * D r r' * (s r + s r'))
     =
     ∑ r : Site,
-      ((∑ r' : Site, (1 / 4 : ℝ) * D r r')
-       + (∑ r' : Site, (1 / 4 : ℝ) * D r' r)) * s r := <span class="kw">by</span>
+      ((∑ r' : Site,
+          (1 / 4 : ℝ) * D r r')
+       +
+       (∑ r' : Site,
+          (1 / 4 : ℝ) * D r' r))
+      * s r := by
   classical
-  <span class="cm">-- Split s r + s r', then swap the indices in the second sum</span>
   have hswap :
       (∑ r : Site, ∑ r' : Site,
         (1 / 4 : ℝ) * D r r' * s r')
-      = ∑ r : Site, ∑ r' : Site,
-        (1 / 4 : ℝ) * D r' r * s r := <span class="kw">by</span>
+      =
+      ∑ r : Site, ∑ r' : Site,
+        (1 / 4 : ℝ) * D r' r * s r := by
     rw [Finset.sum_comm]
-  <span class="cm">-- The remaining steps use finite-sum distributivity and ring</span>
-  ...</code></pre></div>
-          <p class="small">The original Lean file contains the complete <code>calc</code> proof represented by the ellipsis; only the key index exchange is displayed here.</p>
+  calc
+    (∑ r : Site, ∑ r' : Site,
+      (1 / 4 : ℝ) * D r r' * (s r + s r'))
+        =
+        (∑ r : Site, ∑ r' : Site,
+          (1 / 4 : ℝ) * D r r' * s r)
+        +
+        (∑ r : Site, ∑ r' : Site,
+          (1 / 4 : ℝ) * D r r' * s r') := by
+            simp only [mul_add, Finset.sum_add_distrib]
+    _ =
+        (∑ r : Site, ∑ r' : Site,
+          (1 / 4 : ℝ) * D r r' * s r)
+        +
+        (∑ r : Site, ∑ r' : Site,
+          (1 / 4 : ℝ) * D r' r * s r) := by
+            rw [hswap]
+    _ =
+        ∑ r : Site,
+          ((∑ r' : Site,
+              (1 / 4 : ℝ) * D r r')
+           +
+           (∑ r' : Site,
+              (1 / 4 : ℝ) * D r' r))
+          * s r := by
+            rw [← Finset.sum_add_distrib]
+            apply Finset.sum_congr rfl
+            intro r _
+            rw [← Finset.sum_mul, ← Finset.sum_mul]
+            ring</code></pre></div>
+          <p class="small"><code>Finset.sum_comm</code> performs the crucial exchange of the finite summation indices.</p>
         </article>
       </div>
     </section>
 
-    <section class="section" id="theorem">
+     <section class="section" id="effective-parameters">
       <div class="section-head">
-        <h2>6 · Main theorem: the two Hamiltonians are exactly equal</h2>
-        <p>Local algebraic identity + linear-term rearrangement</p>
+        <h2>8 · Define the effective Ising parameters and Ising Hamiltonian</h2>
+        <p>Lean declares the target Ising model before proving the mapping</p>
       </div>
       <div class="compare">
         <article class="pane">
-          <div class="pane-label math-label">Written solution <span class="tag">Conclusion</span></div>
-          <p>Substituting the preceding results back into the double sum gives</p>
-          <div class="result">
-            <strong>Exact mapping</strong>
-            <div class="math">$$
-            H_{\mathrm{alloy}}(\sigma)
-            =H_{\mathrm{Ising}}\big(J_{\mathrm{eff}},h_{\mathrm{eff}},C,s_\sigma\big).
-            $$</div>
+          <div class="pane-label math-label">Written solution <span class="tag">Target Ising model</span></div>
+          <p>Now we can define the effective coupling, field, and configuration-independent constant of the Ising model we map to by</p>
+          <div class="math">$$
+          \begin{aligned}
+          J_{\mathrm{eff}}(J_{AA},J_{BB},J_{AB},r,r')&=\tfrac14\big(J_{AA}(r,r')+J_{BB}(r,r')-2J_{AB}(r,r')\big),\\
+          h_{\mathrm{eff}}(J_{AA},J_{BB},r)&=\sum_{r'}\tfrac14\big(J_{AA}(r,r')-J_{BB}(r,r')\big)
+          +\sum_{r'}\tfrac14\big(J_{AA}(r',r)-J_{BB}(r',r)\big),\\
+          C(J_{AA},J_{BB},J_{AB})&=\sum_{r,r'}\tfrac14\big(J_{AA}(r,r')+J_{BB}(r,r')+2J_{AB}(r,r')\big).
+          \end{aligned}
+          $$</div>
+          <p>The target Hamiltonian uses the sign convention</p>
+          <div class="math">$$H_{\mathrm{Ising}}(J,h,C,s)=\sum_{r,r'}J(r,r')s(r)s(r')+\sum_r h(r)s(r)+C.$$</div>
+        </article>
+        <article class="pane">
+          <div class="pane-label lean-label">Lean 4 <span class="tag">effectiveCoupling → isingHamiltonian</span></div>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## Effective Ising parameters -/
+
+/--
+Effective Ising coupling
+
+J(r,r') = 1/4 (J_AA + J_BB - 2 J_AB).
+-/
+noncomputable def effectiveCoupling
+    (JAA JBB JAB : Site → Site → ℝ)
+    (r r' : Site) : ℝ :=
+  (1 / 4 : ℝ) *
+    (JAA r r' + JBB r r' - 2 * JAB r r')
+
+/--
+Effective magnetic field.
+
+This is written as two sums because this form is convenient
+for the proof.  Below we prove that it is identical to
+
+1/4 Σ_{r'} [
+  J_AA(r,r') - J_BB(r,r')
+  + J_AA(r',r) - J_BB(r',r)
+].
+-/
+noncomputable def effectiveField
+    (JAA JBB : Site → Site → ℝ)
+    (r : Site) : ℝ :=
+    (∑ r' : Site,
+      (1 / 4 : ℝ) * (JAA r r' - JBB r r'))
+  + (∑ r' : Site,
+      (1 / 4 : ℝ) * (JAA r' r - JBB r' r))
+
+/--
+The configuration-independent constant C.
+-/
+noncomputable def effectiveConstant
+    (JAA JBB JAB : Site → Site → ℝ) : ℝ :=
+  ∑ r : Site, ∑ r' : Site,
+    (1 / 4 : ℝ) *
+      (JAA r r' + JBB r r' + 2 * JAB r r')
+
+/--
+Generic Ising Hamiltonian, following the sign convention
+used in the problem:
+
+H = Σ J(r,r') s(r)s(r') + Σ h(r)s(r) + C.
+-/
+def isingHamiltonian
+    (J : Site → Site → ℝ)
+    (h : Site → ℝ)
+    (C : ℝ)
+    (s : Site → ℝ) : ℝ :=
+    (∑ r : Site, ∑ r' : Site,
+      J r r' * s r * s r')
+  + (∑ r : Site, h r * s r)
+  + C</code></pre></div>
+          <p class="small">These definitions are introduced before the algebraic mapping lemmas, exactly as in the Lean source.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="main-theorem">
+      <div class="section-head">
+        <h2>9 · Conclude exact equality with the Ising Hamiltonian</h2>
+        <p>The decomposition theorem and field rearrangement are combined</p>
+      </div>
+      <div class="compare">
+        <article class="pane">
+          <div class="pane-label math-label">Written solution <span class="tag">Exact mapping</span></div>
+          <p>Using the field rearrangement in the preceding decomposition gives</p>
+          <div class="result"><strong>Main result</strong>
+            <div class="math">$$H_{\mathrm{alloy}}(J_{AA},J_{BB},J_{AB},\sigma)=H_{\mathrm{Ising}}\big(J_{\mathrm{eff}},h_{\mathrm{eff}},C,s_\sigma\big).$$</div>
           </div>
-          <p>No approximation is involved, and no symmetry of $J_{AA}$, $J_{BB}$, or $J_{AB}$ is required. The equality holds for every configuration on a finite lattice.</p>
+          <p>The equality is exact for every configuration on the finite lattice.</p>
         </article>
         <article class="pane">
           <div class="pane-label lean-label">Lean 4 <span class="tag">alloy_eq_ising</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">theorem</span> <span class="fn">alloy_eq_ising</span>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! -! ## Main theorem -/
+
+/--
+The binary-alloy Hamiltonian is exactly an Ising Hamiltonian
+with the stated effective coupling, field, and constant.
+-/
+theorem alloy_eq_ising
     (JAA JBB JAB : Site → Site → ℝ)
     (σ : Config Site) :
     alloyHamiltonian JAA JBB JAB σ
@@ -479,54 +740,84 @@
       (effectiveCoupling JAA JBB JAB)
       (effectiveField JAA JBB)
       (effectiveConstant JAA JBB JAB)
-      (spinConfig σ) := <span class="kw">by</span>
+      (spinConfig σ) := by
   rw [alloy_decomposition]
-  unfold isingHamiltonian effectiveField
+  unfold isingHamiltonian effectiveCoupling effectiveField effectiveConstant
   rw [field_rearrangement]</code></pre></div>
-          <p class="small"><code>alloy_decomposition</code> applies the local identity to every pair of sites, while <code>field_rearrangement</code> converts the result into the standard Ising field term.</p>
+          <p class="small">The proof uses <code>alloy_decomposition</code> first and <code>field_rearrangement</code> last.</p>
         </article>
       </div>
     </section>
 
+  
     <section class="section" id="symmetry">
       <div class="section-head">
-        <h2>7 · Zero field and $\mathbb Z_2$ symmetry</h2>
-        <p>The symmetry condition relevant to the phase transition</p>
+        <h2>10 · Derive zero field and global ℤ₂ symmetry</h2>
+        <p>The symmetry results follow the mapping and formula-recovery theorems</p>
       </div>
       <div class="compare">
         <article class="pane">
           <div class="pane-label math-label">Written solution <span class="tag">Physical condition</span></div>
-          <p>If $h(r)=0$ for every $r$, the Hamiltonian is invariant under the global spin flip</p>
-          <div class="math">$$s(r)\longmapsto-s(r),\qquad H[-s]=H[s].$$</div>
-          <p>A simple sufficient condition is $J_{AA}(r,r')=J_{BB}(r,r')$. In that case, the effective coupling $J_{\mathrm{eff}}$ controls the ordering tendency and critical scale.</p>
-          <div class="note"><strong>Important:</strong> In general, $h\neq0$ still gives an Ising Hamiltonian with an external field. However, the field explicitly breaks the $s\mapsto-s$ symmetry, so one cannot directly claim the same spontaneous-symmetry-breaking transition as in the zero-field Ising model.</div>
+          <p>A simple sufficient condition for zero field is</p>
+          <div class="math">$$J_{AA}(r,r')=J_{BB}(r,r')\quad\forall r,r'\in \text{Site}.$$</div>
+          <p>Then $h_{\mathrm{eff}}=0$. At zero field the Ising Hamiltonian is invariant under</p>
+          <div class="math">$$s(r)\mapsto-s(r),\qquad H[-s]=H[s].$$</div>
+          <div class="note"><strong>Scope:</strong> A nonzero field still defines an Ising Hamiltonian, but explicitly breaks this global spin-flip symmetry.</div>
         </article>
         <article class="pane">
           <div class="pane-label lean-label">Lean 4 <span class="tag">zero field + spin flip</span></div>
-          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code><span class="kw">theorem</span> <span class="fn">effectiveField_zero_of_equal_interactions</span>
+          <div class="code-wrap"><button class="copy" type="button">Copy</button><pre><code>/-! ## Zero field and Z₂ symmetry -/
+
+/--
+A simple sufficient condition for zero effective field:
+J_AA = J_BB pointwise.
+-/
+theorem effectiveField_zero_of_equal_interactions
     (JAA JBB : Site → Site → ℝ)
     (hEq : ∀ r r', JAA r r' = JBB r r') :
-    effectiveField JAA JBB = fun _ => 0 := <span class="kw">by</span>
+    effectiveField JAA JBB = fun _ =&gt; 0 := by
   funext r
   simp [effectiveField, hEq]
 
-<span class="kw">theorem</span> <span class="fn">ising_zeroField_spinFlip</span>
-    (J : Site → Site → ℝ) (C : ℝ) (s : Site → ℝ) :
-    isingHamiltonian J (fun _ => 0) C (fun r => -s r)
-    = isingHamiltonian J (fun _ => 0) C s := <span class="kw">by</span>
+/--
+An Ising Hamiltonian with h = 0 is invariant under
+the global spin flip s ↦ -s.
+-/
+theorem ising_zeroField_spinFlip
+    (J : Site → Site → ℝ)
+    (C : ℝ)
+    (s : Site → ℝ) :
+    isingHamiltonian J (fun _ =&gt; 0) C (fun r =&gt; -s r)
+    =
+    isingHamiltonian J (fun _ =&gt; 0) C s := by
   classical
-  <span class="cm">-- Each quadratic term contains two minus signs and is unchanged</span>
-  ...</code></pre></div>
-          <p class="small">Lean proves precisely that equal like-species interactions imply a zero effective field, and that a zero field implies spin-flip invariance.</p>
+  have hpair :
+      (∑ r : Site, ∑ r' : Site,
+        J r r' * (-s r) * (-s r'))
+      =
+      ∑ r : Site, ∑ r' : Site,
+        J r r' * s r * s r' := by
+    apply Finset.sum_congr rfl
+    intro r _
+    apply Finset.sum_congr rfl
+    intro r' _
+    ring
+  unfold isingHamiltonian
+  simpa only [
+    zero_mul,
+    Finset.sum_const_zero,
+    add_zero
+  ] using congrArg (fun x : ℝ =&gt; x + C) hpair</code></pre></div>
+          <p class="small">Lean proves the zero-field condition and spin-flip invariance as separate theorems.</p>
         </article>
       </div>
     </section>
 
     <section class="section conclusion" id="scope">
       <h2>Formal conclusion and physical interpretation</h2>
-      <p><strong>Proved in Lean:</strong> On a finite lattice, the binary-alloy Hamiltonian is exactly equal, for every configuration, to an Ising Hamiltonian with the stated $J_{\mathrm{eff}}$, $h_{\mathrm{eff}}$, and $C$. Lean also proves the $\mathbb Z_2$ spin-flip symmetry at zero field.</p>
-      <p><strong>Physical interpretation:</strong> When $h=0$ and the system satisfies the usual conditions required for Ising critical behavior—such as an appropriate dimension, short-range interactions, and a thermodynamic limit—the alloy's order–disorder transition may belong to the Ising universality class.</p>
-      <div class="note"><strong>Scope of the proof:</strong> <code>cardy1_1.lean</code> does not formalize the thermodynamic limit, critical temperature, correlation length, or critical exponents. Therefore, membership in the Ising universality class is a physical inference built on the algebraic mapping, not a machine-checked theorem in this Lean file.</div>
+      <p><strong>Proved in Lean:</strong> On a finite lattice, the binary-alloy Hamiltonian is exactly equal, for every configuration, to an Ising Hamiltonian with the stated effective coupling, field, and constant. The file also proves zero-field spin-flip symmetry.</p>
+      <p><strong>Ordering of this page:</strong> The explanation now follows the Lean source from local data and identities, through the model definitions and algebraic lemmas, to the main theorem, recovered written formulas, symmetry, and the optional translation-invariant kernel.</p>
+      <div class="note"><strong>Scope of the proof:</strong> <code>cardy1_1.lean</code> does not formalize the thermodynamic limit, critical temperature, correlation length, or critical exponents. Claims about Ising universality remain physical interpretation rather than machine-checked results of this file.</div>
     </section>
   </main>
 
